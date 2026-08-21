@@ -22,12 +22,8 @@ function createLadder(root) {
     { from: 2,  to: 10,  per: 3000 / 9, total: 3000, label: '前10 → 第1' },
   ];
   const FIRST_100_BONUS = 300;
-
-  const SUBJECTS = {
-    math:    { name: '数学', color: '34,211,238' },
-    physics: { name: '物理', color: '167,139,250' },
-    other:   { name: '其他', color: '251,191,36' },
-  };
+  // 总成绩排名：标记点统一使用科技青色
+  const MARK_COLOR = '34,211,238';
 
   /* ---------- 山体坐标映射 ----------
      山高 4000px：第 1 名在山顶 (y≈160)，第 100 名在山脚 (y≈3820) */
@@ -126,18 +122,9 @@ function createLadder(root) {
           <h3 class="lcard-title">➕ 添加考试记录</h3>
           <form class="lform" data-form>
             <div class="lfield"><label>考试名称</label><input name="name" type="text" placeholder="如：八上期中考试" required></div>
+            <div class="lfield"><label>日期</label><input name="date" type="date" required></div>
             <div class="lfield-row">
-              <div class="lfield"><label>日期</label><input name="date" type="date" required></div>
-              <div class="lfield"><label>科目</label>
-                <select name="subject">
-                  <option value="math">数学</option>
-                  <option value="physics">物理</option>
-                  <option value="other">其他</option>
-                </select>
-              </div>
-            </div>
-            <div class="lfield-row">
-              <div class="lfield"><label>名次</label><input name="rank" type="number" min="1" max="9999" placeholder="第几名" required></div>
+              <div class="lfield"><label>名次（总成绩）</label><input name="rank" type="number" min="1" max="9999" placeholder="第几名" required></div>
               <div class="lfield"><label>总人数(选)</label><input name="total" type="number" min="1" max="99999" placeholder="可选"></div>
             </div>
             <button class="btn" type="submit">✍️ 记下这次考试</button>
@@ -355,7 +342,7 @@ function createLadder(root) {
       const y = Math.min(MT.total - 90, yOf(Math.min(rec.rank, 100)));
       m.style.top = y + 'px';
       m.style.left = `calc(50% + ${(idx - 1 - (perRank[rec.rank] - 1) / 2) * 34}px)`;
-      m.style.setProperty('--a', (SUBJECTS[rec.subject] || SUBJECTS.other).color);
+      m.style.setProperty('--a', MARK_COLOR);
       m.innerHTML = `<i></i><b>${rec.rank}</b>`;
       m.dataset.id = rec.id;
       if (rec.rank > 100) m.classList.add('out');
@@ -397,11 +384,10 @@ function createLadder(root) {
     }
     recs.forEach(rec => {
       const info = rec._info;
-      const sub = SUBJECTS[rec.subject] || SUBJECTS.other;
       const card = document.createElement('div');
       card.className = 'lrec';
       card.innerHTML = `
-        <i class="ldot" style="--a:${sub.color}"></i>
+        <i class="ldot" style="--a:${MARK_COLOR}"></i>
         <div class="lrec-main">
           <div class="lrec-top">
             <b>${esc(rec.name)}</b>
@@ -464,11 +450,10 @@ function createLadder(root) {
     const f = e.target;
     const name = f.name.value.trim();
     const date = f.date.value;
-    const subject = f.subject.value;
     const rank = parseInt(f.rank.value, 10);
     const total = parseInt(f.total.value, 10);
     if (!name || !date || !rank || rank < 1) { window.showToast && window.showToast('请填写考试名称、日期与有效名次'); return; }
-    records.push({ id: Date.now() + Math.floor(Math.random() * 1000), name, date, subject, rank, total: total > 0 ? total : null });
+    records.push({ id: Date.now() + Math.floor(Math.random() * 1000), name, date, rank, total: total > 0 ? total : null });
     save();
     renderAll();
     f.reset();
@@ -503,11 +488,10 @@ function createLadder(root) {
     if (!m) return;
     const rec = records.find(r => String(r.id) === String(m.dataset.id));
     if (!rec) return;
-    const sub = SUBJECTS[rec.subject] || SUBJECTS.other;
     tip.querySelector('.tt-name').textContent = `${rec.name} · 第${rec.rank}名`;
-    tip.querySelector('.tt-en').textContent = sub.name + (rec.total ? ' · 共' + rec.total + '人' : '');
+    tip.querySelector('.tt-en').textContent = '总成绩排名' + (rec.total ? ' · 共' + rec.total + '人' : '');
     const st = tip.querySelector('.tt-status');
-    st.style.setProperty('--a', sub.color);
+    st.style.setProperty('--a', MARK_COLOR);
     st.textContent = rec.date + (rec._info && rec._info.reward > 0 ? ` · +¥${fmt(rec._info.reward)}` : '');
     tip.querySelector('.tt-desc').textContent = rec._info && rec._info.newBest
       ? (rec._info.steps > 0 ? `较上次最佳进步 ${rec._info.steps} 名` : '刷新历史最佳')
