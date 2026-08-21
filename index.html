@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="数理星图 · 学习激励站：数学技能树、物理技能树与名次天梯奖励系统。">
+<title>数理星图 · 学习激励站</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2 L20 7 V17 L12 22 L4 17 V7 Z' fill='none' stroke='%2322d3ee' stroke-width='1.6'/%3E%3Ccircle cx='12' cy='12' r='2.4' fill='%2322d3ee'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Rajdhani:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ===== 顶部导航 ===== -->
+<header class="topbar">
+  <div class="brand">
+    <svg class="logo" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 2 L20 7 V17 L12 22 L4 17 V7 Z" fill="none" stroke="currentColor" stroke-width="1.4"/>
+      <circle cx="12" cy="12" r="2.2" fill="currentColor"/>
+    </svg>
+    <div class="brand-text">
+      <h1>数理星图</h1>
+      <span class="brand-en">STAR MAP · 学习激励站</span>
+    </div>
+  </div>
+  <nav class="tabs" aria-label="功能页签">
+    <button class="tab" data-view="math">🧮 数学星图</button>
+    <button class="tab" data-view="physics">⚛️ 物理星图</button>
+    <button class="tab" data-view="ladder">🏆 名次天梯</button>
+  </nav>
+</header>
+
+<main>
+  <!-- 数学星图 -->
+  <section id="view-math" class="view" data-view="math"></section>
+
+  <!-- 物理星图 -->
+  <section id="view-physics" class="view" data-view="physics"></section>
+
+  <!-- 名次天梯 -->
+  <section id="view-ladder" class="view" data-view="ladder"></section>
+</main>
+
+<!-- ===== 悬浮提示 & 轻提示（全局共享） ===== -->
+<div class="tooltip" id="tooltip" aria-hidden="true">
+  <div class="tt-name"></div>
+  <div class="tt-en"></div>
+  <div class="tt-desc"></div>
+  <div class="tt-status"></div>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<noscript><div class="noscript">请启用 JavaScript 以查看本网站。</div></noscript>
+
+<script src="data-math.js"></script>
+<script src="data-physics.js"></script>
+<script src="app-tree.js"></script>
+<script src="app-ladder.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
