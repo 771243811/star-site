@@ -1071,11 +1071,208 @@ main {
 }
 
 /* ============================================================
+   幸运抽奖视图
+   ============================================================ */
+
+.view[data-view="lottery"].active {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - var(--topbar-h) - 12px);
+}
+
+.lottery-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: 44px;
+  padding: 0 22px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.lottery-toolbar .terms-tip { color: #fbbf24; text-shadow: 0 0 12px rgba(251, 191, 36, 0.4); }
+
+.lottery-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  gap: 0;
+}
+
+.lottery-left {
+  flex: 1.2;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 20px;
+  overflow-y: auto;
+}
+
+/* 积分卡 */
+.coin-card { position: relative; }
+.coin-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.coin-label { font-size: 13px; color: var(--text-faint); letter-spacing: 0.2em; }
+.coin-value {
+  font-family: var(--font-head);
+  font-size: 40px;
+  font-weight: 700;
+  color: #fde68a;
+  text-shadow: 0 0 24px rgba(251, 191, 36, 0.55);
+}
+.coin-actions { display: flex; flex-direction: column; gap: 10px; }
+.coin-act {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.025);
+}
+.coin-act-label { font-size: 11px; color: var(--text-faint); letter-spacing: 0.08em; }
+.coin-row { display: flex; gap: 8px; margin-top: 7px; flex-wrap: wrap; }
+.coin-row input {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 13px;
+  outline: none;
+  width: 110px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.coin-row input:focus { border-color: rgba(34, 211, 238, 0.6); box-shadow: 0 0 12px rgba(34, 211, 238, 0.18); }
+.coin-row input[type="password"] { width: 150px; }
+.coin-day-state { display: block; margin-top: 7px; font-size: 11px; color: var(--text-dim); }
+
+/* 抽奖舞台 */
+.lottery-stage {
+  flex: 1;
+  min-height: 170px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background:
+    radial-gradient(500px 200px at 50% 0%, rgba(251, 191, 36, 0.07), transparent 70%),
+    rgba(255, 255, 255, 0.02);
+}
+.stage-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+.btn.big {
+  padding: 14px 30px;
+  font-size: 16px;
+  border-radius: 12px;
+  letter-spacing: 0.14em;
+}
+.btn.gold {
+  border-color: rgba(251, 191, 36, 0.55);
+  background: linear-gradient(160deg, rgba(251, 191, 36, 0.2), rgba(251, 191, 36, 0.05));
+  color: #fde68a;
+}
+.btn.gold:hover {
+  border-color: rgba(251, 191, 36, 0.95);
+  box-shadow: 0 0 22px rgba(251, 191, 36, 0.4), inset 0 0 12px rgba(251, 191, 36, 0.1);
+  color: #fff;
+}
+.btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+
+.stage-results {
+  min-height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.rcard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 92px;
+  height: 86px;
+  border-radius: 12px;
+  border: 1px solid rgba(251, 191, 36, 0.5);
+  background: linear-gradient(160deg, rgba(251, 191, 36, 0.16), rgba(255, 255, 255, 0.02));
+  box-shadow: 0 0 18px rgba(251, 191, 36, 0.2);
+  animation: cardIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.rcard.single { width: 150px; height: 96px; }
+.rcard .r-icon { font-size: 30px; }
+.rcard.single .r-icon { font-size: 40px; }
+.rcard .r-label { font-size: 11px; color: #fde68a; letter-spacing: 0.04em; text-align: center; }
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(16px) scale(0.8); filter: blur(4px); }
+  to   { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+.r-summary {
+  width: 100%;
+  text-align: center;
+  font-size: 13px;
+  color: #fde68a;
+  letter-spacing: 0.06em;
+  animation: cardIn 0.4s ease both;
+}
+
+/* 奖品统计 */
+.prize-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 10px; }
+.prize {
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.025);
+  font-size: 12px;
+  color: var(--text-dim);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.prize b { color: #fde68a; font-size: 15px; }
+.frag-bar {
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+.frag-bar i {
+  display: block;
+  height: 100%;
+  width: 0%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #f59e0b, #fde68a);
+  box-shadow: 0 0 10px rgba(251, 191, 36, 0.7);
+  transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* 右侧记录面板 */
+.lottery-right {
+  width: 400px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  padding: 14px 16px;
+  border-left: 1px solid rgba(255, 255, 255, 0.07);
+}
+.lrec-result { font-size: 13px; letter-spacing: 0.08em; }
+
+/* ============================================================
    响应式
    ============================================================ */
 
 @media (max-width: 1100px) {
   .ladder-panel { width: 340px; }
+  .lottery-right { width: 340px; }
 }
 
 @media (max-width: 900px) {
@@ -1083,6 +1280,9 @@ main {
   .ladder-body { flex-direction: column; }
   .mountain-wrap { height: 55%; }
   .ladder-panel { width: 100%; max-height: 45%; border-left: none; border-top: 1px solid rgba(255, 255, 255, 0.07); }
+  .lottery-body { flex-direction: column; }
+  .lottery-left { flex: none; height: 52%; }
+  .lottery-right { width: 100%; max-height: 48%; border-left: none; border-top: 1px solid rgba(255, 255, 255, 0.07); }
 }
 
 @media (max-width: 720px) {
@@ -1098,6 +1298,10 @@ main {
   .actions .btn { padding: 6px 9px; font-size: 12px; }
   .m-seg { width: 56%; }
   .lsum-value { font-size: 19px; }
+  .lottery-toolbar { padding: 0 12px; }
+  .lottery-left { padding: 12px; }
+  .coin-value { font-size: 30px; }
+  .btn.big { padding: 11px 18px; font-size: 14px; }
 }
 
 /* ============================================================

@@ -1,6 +1,6 @@
 /* ============================================================
    数理星图 · 学习激励站 app.js
-   入口：全局 toast / 页签路由 / 初始化三视图（纯色背景，无粒子）
+   入口：全局 toast / 页签路由 / 初始化四视图（纯色背景）
    ============================================================ */
 (() => {
   'use strict';
@@ -20,22 +20,24 @@
   /* ---------- 点亮迸发已随粒子背景移除（app-tree 内做了空判断） ---------- */
 
   /* ============================================================
-     初始化三个视图
+     初始化四个视图
      ============================================================ */
   createSkillTree($('#view-math'), { tree: MATH_TREE, storeKey: 'math-skill-tree-v2' });
   createSkillTree($('#view-physics'), { tree: PHYSICS_TREE, storeKey: 'physics-skill-tree-v1' });
   const ladder = createLadder($('#view-ladder'));
+  const lottery = createLottery($('#view-lottery'));
 
   /* ============================================================
      页签路由（hash）
      ============================================================ */
-  const VIEWS = ['math', 'physics', 'ladder'];
+  const VIEWS = ['math', 'physics', 'ladder', 'lottery'];
   const tabs = [...document.querySelectorAll('.tab')];
 
   function apply(v) {
     document.querySelectorAll('.view').forEach(s => s.classList.toggle('active', s.dataset.view === v));
     tabs.forEach(b => b.classList.toggle('active', b.dataset.view === v));
     if (v === 'ladder') requestAnimationFrame(() => ladder.renderAll());
+    else if (v === 'lottery') requestAnimationFrame(() => lottery.render());
     else if (v === 'math' || v === 'physics') {
       // 切回树视图时重新适配（窗口尺寸可能已变化）
       requestAnimationFrame(() => {
