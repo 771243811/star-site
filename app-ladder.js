@@ -525,6 +525,8 @@ function createLadder(root) {
       records = cloud.records;
       save();
       renderAll();
+    } else {
+      save(); // 云端无数据：把本机数据上传（跨设备迁移）
     }
   });
 

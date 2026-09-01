@@ -306,10 +306,12 @@ function createLottery(root) {
 
   /* ---------- 云端同步：拉取其他设备的数据覆盖本机 ---------- */
   Cloud.load(STORE_KEY).then(cloud => {
-    if (cloud && typeof cloud === 'object') {
+    if (cloud && typeof cloud === 'object' && (cloud.coins !== undefined || cloud.records || cloud.coinLog)) {
       state = Object.assign(defaults(), cloud);
       save();
       render();
+    } else {
+      save(); // 云端无数据：把本机数据上传（跨设备迁移）
     }
   });
 

@@ -24,6 +24,6 @@
    5. 把 URL 和 anon key 填到下面两个引号里，保存并重新部署
    ============================================================ */
 const SUPABASE = {
-  url: '',
-  anon: '',
+  url: 'https://cfvzecunatgbkybxezgv.supabase.co',
+  anon: 'sb_publishable_YH6SJxYeGSFD395Aq5mdzQ_HabRResT',
 };

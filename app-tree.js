@@ -422,6 +422,8 @@ function createSkillTree(root, opts) {
       state.lit.add('root');
       if (typeof cloud.strict === 'boolean') state.strict = cloud.strict;
       sync();
+    } else {
+      save(); // 云端无数据：把本机数据上传（跨设备迁移）
     }
   });
 
