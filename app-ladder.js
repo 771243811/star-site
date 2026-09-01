@@ -33,8 +33,12 @@ function createLadder(root) {
   /* ---------- 数据 ---------- */
   let records = [];
   try { records = JSON.parse(localStorage.getItem(STORE_KEY) || '[]') || []; } catch (e) { records = []; }
+  let cloudTimer = null;
   const save = () => {
     try { localStorage.setItem(STORE_KEY, JSON.stringify(records)); } catch (e) { /* ignore */ }
+    // 云端同步（防抖）
+    clearTimeout(cloudTimer);
+    cloudTimer = setTimeout(() => Cloud.save(STORE_KEY, { records }), 600);
   };
 
   const perStep = r => {
@@ -514,5 +518,15 @@ function createLadder(root) {
   const fmt = n => (Math.round(n * 100) / 100).toLocaleString('zh-CN', { maximumFractionDigits: 2 });
 
   renderAll();
+
+  /* ---------- 云端同步：拉取其他设备的数据覆盖本机 ---------- */
+  Cloud.load(STORE_KEY).then(cloud => {
+    if (cloud && Array.isArray(cloud.records)) {
+      records = cloud.records;
+      save();
+      renderAll();
+    }
+  });
+
   return { renderAll };
 }

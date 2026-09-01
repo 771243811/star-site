@@ -27,8 +27,12 @@ function createLottery(root) {
   try {
     state = Object.assign(defaults(), JSON.parse(localStorage.getItem(STORE_KEY) || '{}'));
   } catch (e) { /* ignore */ }
+  let cloudTimer = null;
   const save = () => {
     try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) { /* ignore */ }
+    // 云端同步（防抖）
+    clearTimeout(cloudTimer);
+    cloudTimer = setTimeout(() => Cloud.save(STORE_KEY, state), 600);
   };
 
   const localDate = () => {
@@ -299,5 +303,15 @@ function createLottery(root) {
   });
 
   render();
+
+  /* ---------- 云端同步：拉取其他设备的数据覆盖本机 ---------- */
+  Cloud.load(STORE_KEY).then(cloud => {
+    if (cloud && typeof cloud === 'object') {
+      state = Object.assign(defaults(), cloud);
+      save();
+      render();
+    }
+  });
+
   return { render };
 }

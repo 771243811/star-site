@@ -69,9 +69,15 @@ function createSkillTree(root, opts) {
     }
   } catch (e) { /* ignore */ }
 
+  let cloudTimer = null;
   const save = () => {
     try { localStorage.setItem(storeKey, JSON.stringify({ lit: [...state.lit], strict: state.strict })); }
     catch (e) { /* ignore */ }
+    // 云端同步（防抖）
+    clearTimeout(cloudTimer);
+    cloudTimer = setTimeout(() => {
+      Cloud.save(storeKey, { lit: [...state.lit], strict: state.strict });
+    }, 600);
   };
 
   /* ---------- 数据展平 ---------- */
@@ -408,5 +414,16 @@ function createSkillTree(root, opts) {
   });
 
   sync();
+
+  /* ---------- 云端同步：拉取其他设备的数据覆盖本机 ---------- */
+  Cloud.load(storeKey).then(cloud => {
+    if (cloud && Array.isArray(cloud.lit)) {
+      state.lit = new Set(cloud.lit);
+      state.lit.add('root');
+      if (typeof cloud.strict === 'boolean') state.strict = cloud.strict;
+      sync();
+    }
+  });
+
   return { sync, fit };
 }
