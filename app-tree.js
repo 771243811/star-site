@@ -76,7 +76,11 @@ function createSkillTree(root, opts) {
     // 云端同步（防抖）
     clearTimeout(cloudTimer);
     cloudTimer = setTimeout(() => {
-      Cloud.save(storeKey, { lit: [...state.lit], strict: state.strict });
+      if (Cloud.ready()) {
+        Cloud.save(storeKey, { lit: [...state.lit], strict: state.strict }).then(ok => {
+          if (!ok) window.showToast && window.showToast('⚠️ 云同步失败：数据已保存在本机，请检查网络后重试');
+        });
+      }
     }, 600);
   };
 
@@ -415,13 +419,16 @@ function createSkillTree(root, opts) {
 
   sync();
 
-  /* ---------- 云端同步：拉取其他设备的数据覆盖本机 ---------- */
+  /* ---------- 云端同步：点亮状态取并集（任何设备点亮的都不丢） ---------- */
   Cloud.load(storeKey).then(cloud => {
     if (cloud && Array.isArray(cloud.lit)) {
-      state.lit = new Set(cloud.lit);
-      state.lit.add('root');
-      if (typeof cloud.strict === 'boolean') state.strict = cloud.strict;
+      const merged = new Set(state.lit);
+      cloud.lit.forEach(id => merged.add(id));
+      merged.add('root');
+      state.lit = merged;
+      if (cloud.strict) state.strict = true;
       sync();
+      save();
     } else {
       save(); // 云端无数据：把本机数据上传（跨设备迁移）
     }

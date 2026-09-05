@@ -32,7 +32,13 @@ function createLottery(root) {
     try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) { /* ignore */ }
     // 云端同步（防抖）
     clearTimeout(cloudTimer);
-    cloudTimer = setTimeout(() => Cloud.save(STORE_KEY, state), 600);
+    cloudTimer = setTimeout(() => {
+      if (Cloud.ready()) {
+        Cloud.save(STORE_KEY, state).then(ok => {
+          if (!ok) toast('⚠️ 云同步失败：数据已保存在本机，请检查网络后重试');
+        });
+      }
+    }, 600);
   };
 
   const localDate = () => {
@@ -304,15 +310,39 @@ function createLottery(root) {
 
   render();
 
-  /* ---------- 云端同步：拉取其他设备的数据覆盖本机 ---------- */
+  /* ---------- 云端同步：多设备互通（合并去重，不覆盖任一方新增） ----------
+     规则：云端空 → 本机数据上传；本机空 → 拉云端；双方都有 → 按 id 合并去重，数值取较新操作方 */
   Cloud.load(STORE_KEY).then(cloud => {
-    if (cloud && typeof cloud === 'object' && (cloud.coins !== undefined || cloud.records || cloud.coinLog)) {
-      state = Object.assign(defaults(), cloud);
+    const defs = defaults();
+    const hasCloud = !!(cloud && typeof cloud === 'object') && (Array.isArray(cloud.records) ? cloud.records.length : 0) > 0
+      || (Array.isArray(cloud && cloud.coinLog) ? cloud.coinLog.length : 0) > 0
+      || (cloud && typeof cloud.coins === 'number' && cloud.coins !== 0);
+    const localHas = state.records.length > 0 || state.coinLog.length > 0 || state.coins !== 0;
+    if (!hasCloud) { save(); return; } // 云端无数据 → 本机上传
+    if (!localHas) { // 本机全新 → 直接用云端数据
+      state = Object.assign(defs, cloud);
       save();
       render();
-    } else {
-      save(); // 云端无数据：把本机数据上传（跨设备迁移）
+      return;
     }
+    // 双方都有 → 记录按 id 合并去重（任何设备的操作都不丢）
+    const recMap = new Map();
+    [...state.records, ...(cloud.records || [])].forEach(r => { if (r && r.id != null) recMap.set(r.id, r); });
+    const logMap = new Map();
+    [...state.coinLog, ...(cloud.coinLog || [])].forEach(l => { if (l && l.id != null) logMap.set(l.id, l); });
+    const localLatest = Math.max(0, ...state.records.map(r => r.id || 0), ...state.coinLog.map(l => l.id || 0));
+    const cloudLatest = Math.max(0, ...(cloud.records || []).map(r => r.id || 0), ...(cloud.coinLog || []).map(l => l.id || 0));
+    const takeCloud = cloudLatest > localLatest;
+    state.records = [...recMap.values()].sort((a, b) => (b.id || 0) - (a.id || 0));
+    state.coinLog = [...logMap.values()].sort((a, b) => (b.id || 0) - (a.id || 0));
+    if (takeCloud) { // 数值（积分/碎片/日卡/打卡日）取较新操作方的值
+      if (typeof cloud.coins === 'number') state.coins = cloud.coins;
+      if (typeof cloud.fragments === 'number') state.fragments = cloud.fragments;
+      if (typeof cloud.dayCards === 'number') state.dayCards = cloud.dayCards;
+      if (cloud.dayAdded) state.dayAdded = cloud.dayAdded;
+    }
+    save();
+    render();
   });
 
   return { render };

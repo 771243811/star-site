@@ -38,7 +38,13 @@ function createLadder(root) {
     try { localStorage.setItem(STORE_KEY, JSON.stringify(records)); } catch (e) { /* ignore */ }
     // 云端同步（防抖）
     clearTimeout(cloudTimer);
-    cloudTimer = setTimeout(() => Cloud.save(STORE_KEY, { records }), 600);
+    cloudTimer = setTimeout(() => {
+      if (Cloud.ready()) {
+        Cloud.save(STORE_KEY, { records }).then(ok => {
+          if (!ok) window.showToast && window.showToast('⚠️ 云同步失败：数据已保存在本机，请检查网络后重试');
+        });
+      }
+    }, 600);
   };
 
   const perStep = r => {
@@ -519,15 +525,19 @@ function createLadder(root) {
 
   renderAll();
 
-  /* ---------- 云端同步：拉取其他设备的数据覆盖本机 ---------- */
+  /* ---------- 云端同步：多设备互通（合并去重，不覆盖任一方新增） ---------- */
   Cloud.load(STORE_KEY).then(cloud => {
-    if (cloud && Array.isArray(cloud.records)) {
-      records = cloud.records;
-      save();
-      renderAll();
-    } else {
-      save(); // 云端无数据：把本机数据上传（跨设备迁移）
-    }
+    const cloudRecs = (cloud && Array.isArray(cloud.records)) ? cloud.records : [];
+    const hasCloud = cloudRecs.length > 0;
+    const localHas = records.length > 0;
+    if (!hasCloud) { save(); return; } // 云端无数据 → 本机上传
+    if (!localHas) { records = cloudRecs; save(); renderAll(); return; } // 本机全新 → 拉云端
+    // 双方都有 → 按 id 合并去重（任何设备新增/删除后的记录都不丢）
+    const map = new Map();
+    [...records, ...cloudRecs].forEach(r => { if (r && r.id != null) map.set(r.id, r); });
+    records = [...map.values()].sort((a, b) => (b.id || 0) - (a.id || 0));
+    save();
+    renderAll();
   });
 
   return { renderAll };
